@@ -49,6 +49,31 @@ docker compose up --build
 - App: http://localhost
 - API: http://localhost:8000/docs
 
+## CI/CD (GitHub Actions)
+
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | pull requests, pushes to other branches | Backend: ruff + pytest + import check. Frontend: typecheck + build. Builds both Docker images. |
+| `.github/workflows/cd.yml` | push to `main`, `v*` tags | Runs CI, publishes images to GitHub Container Registry (`ghcr.io/<owner>/<repo>/backend` and `/frontend`), then optionally deploys over SSH. |
+
+Dependabot (`.github/dependabot.yml`) opens weekly update PRs for pip, npm, Docker and Actions.
+
+**Run the backend checks locally**
+
+```bash
+cd backend && pip install -r requirements.txt -r requirements-dev.txt
+ruff check . && pytest
+```
+
+**Enable deployment (optional)** - in the repo's *Settings > Secrets and variables > Actions*:
+
+- Variable `DEPLOY_ENABLED` = `true`
+- Secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (private key), `DEPLOY_PATH` (folder on the server)
+- Put `backend/.env` in `DEPLOY_PATH` on the server. The deploy job copies `docker-compose.prod.yml` there and runs `docker compose pull && up -d`.
+- Optional variable `VITE_GOOGLE_CLIENT_ID` for the frontend build.
+
+The server needs Docker with the compose plugin, and the packages must be readable by it (make the GHCR packages public, or log in on the server with a token that has `read:packages`).
+
 ## Environment variables
 
 **backend/.env**

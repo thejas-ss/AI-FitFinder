@@ -1,0 +1,6 @@
+line-length = 130
+target-version = "py311"
+extend-exclude = ["tests/__pycache__"]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
